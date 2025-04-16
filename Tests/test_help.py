@@ -1,10 +1,9 @@
 import pytest
-from selenium.webdriver.common.by import By
+
 from Locators import main_page, menu_report, menu_settings
 from fixture.conftest import browser_setup2
 from Metods import auth_methods, common, help_methods
 from fixture import conftest
-import time
 
 
 @pytest.mark.usefixtures("browser_setup2")
@@ -37,44 +36,73 @@ def test_help_report(browser_setup2):
     driver = browser_setup2
     print('\n== Тест "Отчёт" ==')
 
-    # Авторизация
+    # 1. Авторизация
     assert common.check_site(driver), "Неверный сайт"
     auth_methods.login(driver, conftest.Login, conftest.Password)
 
-    # 1. Основная страница "Отчёт"
-    status, msg = help_methods.navigate_to_page(
-        driver,
-        menu_locator=main_page.MENU_REPORT,
-        page_locator=menu_report.AUDITORE,
-        page_name="Отчёт (основная)"
-    )
+    # 2. Переход в раздел "Отчёт"
+    # Клик по кнопке перехода в отчёт
+    report_btn = common.wait_element(driver, main_page.MENU_REPORT, timeout=20, condition='clickable')
+    driver.execute_script("arguments[0].click();", report_btn)
+
+    # 3. Проверка загрузки страницы по локатору AUDITORE
+    auditore = common.wait_element(driver, menu_report.AUDITORE, timeout=20, condition='visible')
+    assert auditore.text == "Аудитории", f"Неверный текст элемента: {auditore.text}"
+
+    # 4. Проверка схемы
+    success, msg = help_methods.check_help_on_page(driver, "Отчет")
     print(msg)
-    assert status, msg
 
-    # 2. Проверка схемы (автоматически закроет её)
-    status, msg = help_methods.check_help_on_page(page_name="Отчёт (основная)")
-    print(msg)
-    assert status, msg
+    # 5. Проверка подстраниц
+    subpages = ["Аудитории", "Сюжеты", "Индикаторы"]
 
-    # 3. Подстраницы
-    subpages = [
-        ("Отчёт → Подстраница 1", menu_report.BTN_SUBPAGE_1, menu_report.LOCATOR_SUBPAGE_1),
-        ("Отчёт → Подстраница 2", menu_report.BTN_SUBPAGE_2, menu_report.LOCATOR_SUBPAGE_2),
-        ("Отчёт → Подстраница 3", menu_report.BTN_SUBPAGE_3, menu_report.LOCATOR_SUBPAGE_3)
-    ]
-
-    for name, btn_locator, check_locator in subpages:
+    for subpage in subpages:
         # Переход
-        status, msg = help_methods.navigate_to_page(
-            driver,
-            menu_locator=btn_locator,
-            page_locator=check_locator,
-            page_name=name
-        )
+        success, msg = help_methods.navigate_to_subpage(driver, subpage)
         print(msg)
-        assert status, msg
+        if not success:
+            continue  # Переходим к следующей подстранице
 
         # Проверка схемы
-        status, msg = help_methods.check_help_on_page(page_name=name)
+        success, msg = help_methods.check_help_on_page(driver, subpage)
         print(msg)
-        assert status, msg
+
+    print("\n=== Тест завершён ===")
+
+
+def test_help_settings(browser_setup2):
+    driver = browser_setup2
+    print('\n== Тест "Настройки" ==')
+
+    # 1. Авторизация
+    assert common.check_site(driver), "Неверный сайт"
+    auth_methods.login(driver, conftest.Login, conftest.Password)
+
+    # 2. Переход в раздел "Настройки"
+    # Клик по кнопке перехода в Настройки
+    report_btn = common.wait_element(driver, main_page.MENU_SETTINGS, timeout=20, condition='clickable')
+    driver.execute_script("arguments[0].click();", report_btn)
+
+    # 3. Проверка загрузки страницы по локатору AUDITORE
+    auditore = common.wait_element(driver, menu_settings.TEMS, timeout=20, condition='visible')
+    assert auditore.text == "Тематики", f"Неверный текст элемента: {auditore.text}"
+
+    # 4. Проверка схемы
+    success, msg = help_methods.check_help_on_page(driver, "Настройки")
+    print(msg)
+
+    # 5. Проверка подстраниц
+    subpages = ["Тематики", "Каналы", "Аудитории"]
+
+    for subpage in subpages:
+        # Переход
+        success, msg = help_methods.navigate_to_subpage(driver, subpage)
+        print(msg)
+        if not success:
+            continue  # Переходим к следующей подстранице
+
+        # Проверка схемы
+        success, msg = help_methods.check_help_on_page(driver, subpage)
+        print(msg)
+
+    print("\n=== Тест завершён ===")

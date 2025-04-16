@@ -1,4 +1,6 @@
 import time
+
+from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
@@ -95,45 +97,54 @@ def check_help_flow(driver: WebDriver) -> list:
     return results
 
 
-def check_help_on_page(
-        driver: WebDriver,
-        page_name: str = "страница"
-) -> tuple:
-    """
-    Проверяет отображение схемы помощи и гарантированно закрывает её.
-    Возвращает сообщение.
-    """
-    try:
-        # Проверка и клик по кнопке помощи
-        help_button = common.wait_element(driver, main_page.HELP_BUTTON, timeout=15, condition='clickable')
-        help_button.click()
+def check_help_on_page(driver: WebDriver, page_name: str) -> tuple:
+    """ Проверяет отображение схемы помощи и закрывает её """
+    print(f"\nПроверка схемы помощи для '{page_name}':")
 
-        # Проверка видимости схемы
-        common.wait_element(driver, main_page.HELP_SCHEMA, timeout=10, condition='visible')
+    # 1. Клик по кнопке помощи
+    print("1. Ищем кнопку помощи... ", end="")
+    help_btn = common.wait_element(driver, main_page.HELP_BUTTON, timeout=5)
+    if not help_btn:
+        return (False, "Кнопка помощи не найдена")
+    print("Найдена")
 
-        # Закрытие схемы
-        close_help_schema(driver)
-        return (True, f"{page_name}: Схема помощи отображается и закрыта")
+    # 2. Проверка отображения схемы
+    print("2. Кликаем и проверяем схему... ", end="")
+    help_btn.click()
 
-    except Exception as e:
-        return (False, f"{page_name}: Ошибка. {str(e)}")
+    schema_visible = common.wait_element(driver, main_page.HELP_SCHEMA, timeout=5)
+    if not schema_visible:
+        return (False, "Схема не отобразилась")
+    print("Отображается")
+
+    # 3. Закрытие схемы
+    print("3. Закрываем схему... ", end="")
+    close_help_schema(driver)
+    print("Выполнено")
+
+    return (True, f"Схема помощи для '{page_name}' проверена")
 
 
-def navigate_to_page_subpage(
-    driver: WebDriver,
-    menu_locator: tuple,
-    page_locator: tuple,
-    page_name: str = "страница",
-    timeout: int = 20
-) -> tuple:
-    """
-    Переходит на страницу и проверяет её загрузку.
-    Возвращает сообщение.
-    """
-    try:
-        menu_btn = common.wait_element(driver, menu_locator, timeout=timeout, condition='clickable')
-        menu_btn.click()
-        common.wait_element(driver, page_locator, timeout=timeout, condition='visible')
-        return (True, f"Успешный переход: {page_name}")
-    except Exception as e:
-        return (False, f"Ошибка перехода на {page_name}: {str(e)}")
+def navigate_to_subpage(driver: WebDriver, subpage_name: str) -> tuple:
+    """ Переходит на подстраницу и проверяет успешность перехода """
+    print(f"\nПереход на подстраницу '{subpage_name}':")
+
+    # 1. Клик по кнопке подстраницы
+    btn_locator = (By.XPATH, f"//button[text()='{subpage_name}']")
+    print(f"1. Ищем кнопку перехода... ", end="")
+    btn = common.wait_element(driver, btn_locator, timeout=5)
+    if not btn:
+        return (False, "Кнопка перехода не найдена")
+    print("Найдена")
+
+    # 2. Клик и проверка загрузки
+    print(f"2. Кликаем и проверяем загрузку... ", end="")
+    btn.click()
+
+    check_locator = (By.XPATH, f"//button[contains(@class, 'active') and text()='{subpage_name}']")
+    page_loaded = common.wait_element(driver, check_locator, timeout=5)
+    if not page_loaded:
+        return (False, "Страница не загрузилась")
+
+    print("Успешно")
+    return (True, f"Успешно перешли на '{subpage_name}'")

@@ -1,18 +1,12 @@
 import pytest
 from selenium import webdriver
-import os
-from dotenv import load_dotenv
-
-
-load_dotenv()
-url = os.getenv("url")
-login = os.getenv("login")
-password = os.getenv("password")
+from config import url
 
 
 @pytest.fixture()
 def driver(request):
     driver = webdriver.Chrome()
+    driver.maximize_window()
     driver.get(url)
 
     def fin():

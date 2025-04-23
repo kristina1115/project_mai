@@ -13,7 +13,7 @@ HELP_TEXT = (By.XPATH, "//div[contains(@class,'UserOnboarding_Item')]")
 PAGINATION_ELEMS = (By.XPATH, "//div[contains(@class, 'StepDot')]")
 BUTTON_REPORT = (By.XPATH, "//button[text()='Аудитории']")
 BUTTON_SETTINGS = (By.XPATH, "//button[text()='Тематики']")
-TITLE_PAGE = (By.XPATH, "//span[text()= 'Картина дня за']")
+TITLE_PAGE = (By.XPATH, "//span[text()= 'Картина дня за ']")
 
 SUB_TABS = (By.XPATH, "//div[contains(@class, 'Switch_')]/button")
 BUTTON = (By.XPATH, "//button[text()='Тематики']")

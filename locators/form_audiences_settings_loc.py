@@ -10,7 +10,9 @@ INDICATOR_COLUMN = (By.XPATH, "//div[contains(@class, 'audiencesTable__row')]//s
 BUTTON_GREEN = (By.XPATH, "//button[contains(@class,'green')]")
 BUTTON_RED = (By.XPATH, "//button[contains(@class,'red')]")
 DELETE_BUTTON_GREEN = (By.XPATH, "//div[contains(@class,'positive')]/button")
+NAME_INDICATOR_GREEN = (By.XPATH, "//div[contains(@class,'positive')]/span")
 DELETE_BUTTON_RED = (By.XPATH, "//div[contains(@class,'negative')]/button")
+NAME_INDICATOR_RED = (By.XPATH, "//div[contains(@class,'negative')]/span")
 
 BUTTON_SUBMIT = (By.XPATH, "//button[@type='submit']")
 BUTTON_CANCEL = (By.XPATH, "//button[text()= 'Отмена']")

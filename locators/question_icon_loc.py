@@ -18,5 +18,5 @@ TITLE_PAGE = (By.XPATH, "//span[text()= 'Картина дня за ']")
 SUB_TABS = (By.XPATH, "//div[contains(@class, 'Switch_')]/button")
 BUTTON = (By.XPATH, "//button[text()='Тематики']")
 
-DATA = (By.XPATH,"//*[@data-onboarding]")
+DATA = (By.XPATH, "//*[@data-onboarding]")
 HINT_MODE = (By.XPATH, "//div[contains(@class, 'Onboarding_Backdrop')]")

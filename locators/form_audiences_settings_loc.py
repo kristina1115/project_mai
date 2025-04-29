@@ -22,8 +22,16 @@ ORIENTATION = (By.XPATH, "//div[contains(@class, 'Orientation')]/span")
 
 ROW_TOPIC = (By.XPATH, "//span/ancestor::div[contains(@class,'Row')]")
 ROW_AUDIENCE = (By.XPATH, "//span/ancestor::div[contains(@class,'audiencesTable__row')]")
+LINK_SUBSTANCE = (By.XPATH, "//div[contains(@class,'Table')]//a")
 
+DELETE_BUTTON = (By.XPATH, "//button[contains(@class, 'delete')]")
 DELETE_CONFIRMATION_BUTTON = (By.XPATH, "//button[text()= 'Да']")
 
 SEARCH_FIELD = (By.XPATH, "//input[@name='search']")
 AUDIENCE_COLUMN = (By.XPATH, "//div[contains(@class,'ThematicsTable_Audience')]")
+
+AUDIENCE_TITLE_COLUMN = (By.XPATH, "//span[text()='Название аудитории']")
+
+TOPIC_TITLE_COLUMN = (By.XPATH, "//span[text()='Класс событий']")
+TOPIC_NAME = (By.XPATH, "//div[contains(@class, 'Table')]/a/span")
+TOPIC_DELETE_BUTTON = (By.XPATH, "//div[contains(@class, 'PositionBox')]")

@@ -1,15 +1,21 @@
 import pytest
+import logging
 from selenium import webdriver
 from config import url
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
 
 
 @pytest.fixture()
 def driver(request):
+    # logging.info("Создаём новый драйвер...")
     driver = webdriver.Chrome()
     driver.maximize_window()
     driver.get(url)
 
     def fin():
+        # logging.info("Закрываем драйвер...")
         driver.quit()
 
     request.addfinalizer(fin)

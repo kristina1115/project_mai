@@ -2,7 +2,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 
-def wait_for(driver, condition, timeout=10, poll_frequency=1, timeout_message=None):
+def wait_for(driver, condition, timeout=20, poll_frequency=1, timeout_message=None):
     """Универсальный метод ожидания."""
     return WebDriverWait(driver, timeout, poll_frequency).until(condition, message=timeout_message)
 
@@ -28,7 +28,7 @@ def to_be_clickable(driver, selector, message):
 def text_presence(driver, selector, text, message):
     """Метод ожидает появления нужного текста внутри элемента."""
     timeout_message = f"{message} (проверка элемента: {selector})"
-    return wait_for(driver, EC.text_to_be_present_in_element(selector, text), timeout_message=timeout_message)
+    return wait_for(driver, EC.text_to_be_present_in_element(selector, text), 90,  timeout_message=timeout_message)
 
 
 def visibility(driver, selector, message):

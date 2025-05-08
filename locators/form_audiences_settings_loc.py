@@ -31,7 +31,3 @@ SEARCH_FIELD = (By.XPATH, "//input[@name='search']")
 AUDIENCE_COLUMN = (By.XPATH, "//div[contains(@class,'ThematicsTable_Audience')]")
 
 AUDIENCE_TITLE_COLUMN = (By.XPATH, "//span[text()='Название аудитории']")
-
-TOPIC_TITLE_COLUMN = (By.XPATH, "//span[text()='Класс событий']")
-TOPIC_NAME = (By.XPATH, "//div[contains(@class, 'Table')]/a/span")
-TOPIC_DELETE_BUTTON = (By.XPATH, "//div[contains(@class, 'PositionBox')]")

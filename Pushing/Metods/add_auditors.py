@@ -1,7 +1,7 @@
 import random
-import time
 
 from selenium.common import NoSuchElementException
+from selenium.webdriver import ActionChains, Keys
 from selenium.webdriver.common.by import By
 from Locators import menu_settings, main_page
 from Metods import common, auth_methods
@@ -14,6 +14,10 @@ def navigate_to_audiences(driver):
     assert common.check_site(driver), "Неверный сайт"
     auth_methods.login(driver, conftest.Login, conftest.Password)
     # print("Авторизация успешна")
+
+    # Проверка успешного входа
+    picture_day = common.wait_element(driver, main_page.PICTURE_DAY, condition="visible")
+    assert picture_day.text == "Картина дня за", f"Неверный текст элемента: {picture_day.text}"
 
     # 2. Переход в раздел "Настройки"
     settings_btn = common.wait_element(driver, main_page.MENU_SETTINGS, timeout=25, condition='clickable')
@@ -91,12 +95,13 @@ def remove_indicator_and_check(driver, text):
     common.wait_element(driver, delete_button_locator, condition='clickable').click()
     #print(f"Нажата кнопка удаления")
 
-    # 4. Проверяем исчезновение индикатора
-    time.sleep(1)  # Даем время на удаление
+    # 4. Проверяем исчезновение индикатора с помощью wait_element
+    if common.wait_element(driver, indicator_locator, timeout=3, condition='invisible'):
+        print(f"Индикатор '{text}' успешно удален")
+        return True
 
-    if common.wait_element(driver, indicator_locator, condition='invisible'):
-        print(f"Индикатор успешно удален")
-    return True
+    #print(f"Индикатор '{text}' не исчез после удаления")
+    return False
 
 
 def political_buttons(driver, **kwargs):
@@ -118,7 +123,6 @@ def political_buttons(driver, **kwargs):
         was_active = 'active' in button.get_attribute('class')
 
         button.click()
-        time.sleep(0.3)  # Небольшая пауза
 
         now_active = 'active' in button.get_attribute('class')
         assert was_active != now_active, f"Кнопка '{btn_text}' не изменила состояние"
@@ -131,14 +135,45 @@ def political_buttons(driver, **kwargs):
 
 def search_audience(driver, title):
     """Ищет аудиторию в таблице"""
-    search_input = common.wait_element(driver, menu_settings.SEARCH, condition='clickable')
-    search_input.clear()
-    search_input.send_keys(title)
-    time.sleep(1)  # Даем время на поиск
+    # 1. Находим поле ввода и кликаем по нему
+    search_field = common.wait_element(driver, menu_settings.SEARCH, timeout=20, condition='clickable')
+    search_field.click()
+
+    # 2. Полностью очищаем поле (3 попытки)
+    cleaned = False
+    for _ in range(3):
+        # Очистка всеми доступными способами
+        search_field.clear()  # Стандартный способ
+        search_field.send_keys(Keys.CONTROL + 'a')  # Выделить всё
+        search_field.send_keys(Keys.DELETE)  # Удалить
+
+        # Проверяем через JavaScript, что поле действительно пустое
+        if driver.execute_script("return arguments[0].value", search_field) == "":
+            cleaned = True
+            break
+
+        # Небольшая пауза между попытками
+        ActionChains(driver).pause(0.3).perform()
+
+    if not cleaned:
+        print("Ошибка: поле поиска не очистилось")
+        return False
+
+    # 3. Вводим новый текст
+    search_field.send_keys(title)
+
+    # Простая проверка
+    return title in search_field.get_attribute('value')
 
 
-def create_and_verify_audience(driver, title):
-    """ Создание аудитории и проверка ее наличия в таблице. """
+def create_and_verify_audience(driver, title, should_create=True):
+    """
+    Создание аудитории и проверка ее наличия в таблице или отмена создания.
+    :param driver: WebDriver
+    :param title: Название аудитории
+    :param should_create: Флаг создания (True - создать, False - отменить)
+    :return: True/False в зависимости от результата (для случая создания)
+    """
     # 1. Заполнение заголовка
     fill_audience_form(driver, title)
     #print(f"Заполнен заголовок: '{title}'")
@@ -156,23 +191,29 @@ def create_and_verify_audience(driver, title):
     political_buttons(driver, count=2, skip=1)
     #print("Кнопки политической ориентации проверены")
 
-    # 5. Сохранение
-    save_button = common.wait_element(driver, menu_settings.SAVE_BUTTON, condition='clickable')
-    save_button.click()
-    #print("Форма сохранена")
+    if should_create:
+        # 5. Сохранение
+        save_button = common.wait_element(driver, menu_settings.SAVE_BUTTON, condition='clickable')
+        save_button.click()
+        print(f"Форма с аудиторией '{title}' сохранена")
 
-    # 6. Проверка в таблице
-    #print("Проверяем наличие в таблице")
-    search_audience(driver, title)
+        # 6. Проверка в таблице
+        search_audience(driver, title)
+        audience_locator = (By.XPATH, f"//*[contains(text(), '{title}')]")
+        audience_row = common.wait_element(driver, audience_locator, timeout=15, condition='visible')
 
-    audience_locator = (By.XPATH, f"//*[contains(text(), '{title}')]")
-    audience_row = common.wait_element(driver, audience_locator, timeout=15, condition='visible')
-    if audience_row:
-        print(f"Аудитория '{title}' успешно создана")
-        return True
+        if audience_row:
+            print(f"Аудитория '{title}' успешно создана")
+            return True
+        else:
+            print(f"Аудитория '{title}' не найдена")
+            return False
     else:
-        print(f"Аудитория '{title}' не найдена")
-        return False
+        # 5. Отмена создания
+        cancel_button = common.wait_element(driver, menu_settings.CANCEL_BUTTON, condition='clickable')
+        cancel_button.click()
+        #print(f"Создание аудитории '{title}' отменено")
+        return True
 
 
 def add_indicators(driver, indicators):
@@ -188,8 +229,7 @@ def add_indicators(driver, indicators):
             delete_btn = common.wait_element(driver, menu_settings.DELETE_BUTTON_INDICATOR,
                                              timeout=2, condition='clickable')
             delete_btn.click()
-            print("Удален существующий индикатор")
-            time.sleep(0.3)
+            #print("Удален существующий индикатор")
         except:
             break
 
@@ -208,7 +248,7 @@ def edit_audience(driver, title, new_title, indicators):
     :param new_title: новое название
     :param indicators: список индикаторов для добавления
     """
-    print(f"\n=== Редактируем аудиторию '{title}' ===")
+    #print(f"\n=== Редактируем аудиторию '{title}' ===")
 
     # 1. Находим и открываем аудиторию
     search_audience(driver, title)
@@ -241,13 +281,12 @@ def delete_audience(driver, new_title, should_delete=True):
     :param should_delete: флаг удаления (по умолчанию True)
     :return: название аудитории (если should_delete=False)
     """
-    print(f"\n=== {'Удаляем' if should_delete else 'Проверяем'} аудиторию '{new_title}' ===")
+    #print(f"\n=== {'Удаляем' if should_delete else 'Проверяем'} аудиторию '{new_title}' ===")
 
     # 1. Находим аудиторию через поиск
-
+    search_audience(driver, new_title)
 
     # 2. Получаем строку с аудиторией
-    search_audience(driver, new_title)
     assert common.wait_element(driver, menu_settings.SEARCH, condition='visible'), \
         f"Аудитория '{new_title}' не найдена после редактирования"
 
@@ -258,10 +297,9 @@ def delete_audience(driver, new_title, should_delete=True):
     # 3. Находим и нажимаем кнопку удаления в строке
     audience_row_btn = common.wait_element(driver, (By.XPATH, f"//a[text()='{new_title}']//following::button[contains(@class, 'deleteBtn')]"), condition='clickable')
     audience_row_btn.click()
-    time.sleep(1)  # Даем время на удаление
 
     # 4. Удаляем аудиторию
-    common.wait_element(driver, menu_settings.AGREE_ON_DELETE_AUDITORE, condition='clickable').click()
+    common.wait_element(driver, menu_settings.AGREE_ON_DELETE_AUDITORE, timeout=15, condition='clickable').click()
 
     # 5. Проверяем отсутствие
     search_audience(driver, new_title)
